@@ -1,4 +1,6 @@
 FROM php:7.4-apache
+LABEL maintainer Teeraphat Youngyeun <teeraphat.june@gmail.com>
+
 RUN a2enmod rewrite
 RUN apt-get update \
     && apt-get install -y wget \
