@@ -1,0 +1,17 @@
+version: "3.0"
+
+services:
+    nginx:
+        build: ./nginx/
+        ports:
+            - 80:80
+        volumes:
+            - "/Users/teeraphat/Sites:/var/www/web/"
+        depends_on: 
+            - php
+    php:
+        build: ./php/
+        ports:
+        - ":9000"
+        volumes:
+            - "/Users/teeraphat/Sites:/var/www/web/"

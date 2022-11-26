@@ -1,0 +1,42 @@
+FROM php:7.4-apache
+RUN a2enmod rewrite
+RUN apt-get update \
+    && apt-get install -y wget \
+    unzip \
+    libmagickwand-dev --no-install-recommends
+RUN mkdir /opt/oracle
+# Install normal extension php
+RUN apt-get install unixodbc unixodbc-dev -y \
+ && docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC,/usr \
+ && docker-php-ext-install pdo_odbc
+ 
+RUN docker-php-ext-install \
+    mysqli pdo pdo_mysql \
+    gd \
+    && pecl install imagick \
+	&& docker-php-ext-enable imagick
+
+# Install Oracle Instantclient
+RUN apt-get install libaio1 
+ENV ORACLE_HOME /opt/oracle/instantclient
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-basic-linux.arm64-19.10.0.0.0dbru.zip \
+&& wget https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-sdk-linux.arm64-19.10.0.0.0dbru.zip \
+&& wget https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-sqlplus-linux.arm64-19.10.0.0.0dbru.zip \
+&& unzip instantclient-basic-linux.arm64-19.10.0.0.0dbru.zip -d /opt/oracle \
+&& unzip instantclient-sdk-linux.arm64-19.10.0.0.0dbru.zip -d /opt/oracle \
+&& unzip instantclient-sqlplus-linux.arm64-19.10.0.0.0dbru.zip -d /opt/oracle \
+&& rm -rf *.zip \
+&& mv /opt/oracle/instantclient_19_10 /opt/oracle/instantclient
+# Add oracle instantclient path to environment
+RUN echo /opt/oracle/instantclient/ > /etc/ld.so.conf.d/oracle.conf \
+    && ldconfig
+# Install Oracle extensions
+RUN docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/opt/oracle/instantclient \
+&& echo 'instantclient,/opt/oracle/instantclient/' | pecl install oci8-2.2.0 \
+&& docker-php-ext-install \
+    pdo_oci \
+&& docker-php-ext-enable \
+    oci8
+
+## Add
+ADD . /var/www/html

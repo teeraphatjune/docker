@@ -1,0 +1,11 @@
+version: "3.0"
+
+services:  
+    php-apache:
+        build: './php'    
+        ports:     
+            - "80:80"
+        volumes:
+            - ${DIRECTORY_ROOT}:/var/www/html
+        environment:
+            - DOCKER_DEFAULT_PLATFORM=linux/amd64
