@@ -56,26 +56,38 @@ RUN set -ex; \
     #apt-get purge -y --auto-remove
 
 # Install Oracle Instantclient
-    RUN mkdir /opt/oracle
-    ENV ORACLE_HOME /opt/oracle/instantclient
-    RUN wget https://download.oracle.com/otn_software/linux/instantclient/185000/instantclient-basic-linux.x64-18.5.0.0.0dbru.zip \
-    && wget https://download.oracle.com/otn_software/linux/instantclient/185000/instantclient-sdk-linux.x64-18.5.0.0.0dbru.zip \
-    && wget https://download.oracle.com/otn_software/linux/instantclient/185000/instantclient-sqlplus-linux.x64-18.5.0.0.0dbru.zip \
-    && unzip instantclient-basic-linux.x64-18.5.0.0.0dbru.zip -d /opt/oracle \
-    && unzip instantclient-sdk-linux.x64-18.5.0.0.0dbru.zip -d /opt/oracle \
-    && unzip instantclient-sqlplus-linux.x64-18.5.0.0.0dbru.zip -d /opt/oracle \
-    && rm -rf *.zip \
-    && mv /opt/oracle/instantclient_18_5 /opt/oracle/instantclient
-# Add oracle instantclient path to environment
-    RUN echo /opt/oracle/instantclient/ > /etc/ld.so.conf.d/oracle.conf \
-        && ldconfig
-# Install Oracle extensions
-    RUN docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/opt/oracle/instantclient \
-    && echo 'instantclient,/opt/oracle/instantclient/' | pecl install oci8-2.2.0 \
-    && docker-php-ext-install \
-        pdo_oci \
+    RUN mkdir /opt/oracle \
+    && cd /opt/oracle 
+    ADD instantclient-basic-linux.x64-12.2.0.1.0.zip /opt/oracle
+    ADD instantclient-sdk-linux.x64-12.2.0.1.0.zip /opt/oracle
+    ADD instantclient-sqlplus-linux.x64-12.2.0.1.0.zip /opt/oracle
+
+    # ENV ORACLE_HOME /opt/oracle/instantclient
+    RUN  unzip /opt/oracle/instantclient-basic-linux.x64-12.2.0.1.0.zip -d /opt/oracle \
+    && unzip /opt/oracle/instantclient-sdk-linux.x64-12.2.0.1.0.zip -d /opt/oracle \
+    && ln -s /opt/oracle/instantclient_12_2/libclntsh.so.12.1 /opt/oracle/instantclient_12_2/libclntsh.so \
+    && ln -s /opt/oracle/instantclient_12_2/libclntshcore.so.12.1 /opt/oracle/instantclient_12_2/libclntshcore.so \
+    && ln -s /opt/oracle/instantclient_12_2/libocci.so.12.1 /opt/oracle/instantclient_12_2/libocci.so \
+    && rm -rf /opt/oracle/*.zip
+
+    ENV LD_LIBRARY_PATH  /opt/oracle/instantclient_12_2:${LD_LIBRARY_PATH}
+    # Install Oracle extensions
+    RUN echo 'instantclient,/opt/oracle/instantclient_12_2/' | pecl install oci8-2.2.0 \ 
     && docker-php-ext-enable \
-        oci8
+        oci8 \ 
+    && docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/opt/oracle/instantclient_12_2,12.2 \
+    && docker-php-ext-install \
+        pdo_oci 
+# # Add oracle instantclient path to environment
+#     RUN echo /opt/oracle/instantclient/ > /etc/ld.so.conf.d/oracle.conf \
+#         && ldconfig
+# # Install Oracle extensions
+#     RUN docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/opt/oracle/instantclient \
+#     && echo 'instantclient,/opt/oracle/instantclient/' | pecl install oci8-2.2.0 \
+#     && docker-php-ext-install \
+#         pdo_oci \
+#     && docker-php-ext-enable \
+#         oci8
 
 ## Add
 ADD . /var/www/html
