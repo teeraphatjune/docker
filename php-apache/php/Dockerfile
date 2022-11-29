@@ -16,11 +16,12 @@ RUN apt-get update \
 RUN apt-get install libaio1 
 
 # Install normal extension php
+RUN pecl install apcu
 RUN docker-php-ext-install \
     intl mysqli pdo pdo_mysql \
     gd \
     && pecl install imagick \
-	&& docker-php-ext-enable imagick pdo
+	&& docker-php-ext-enable imagick pdo apcu
 
 ## Install sqlsrv driver v18 according to msodbcsql18 below
 RUN set -eux; \
