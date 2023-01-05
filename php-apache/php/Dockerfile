@@ -13,7 +13,7 @@ RUN apt-get update \
     unixodbc \
     unixodbc-dev \
     libmagickwand-dev --no-install-recommends
-RUN apt-get install libaio1 
+RUN apt-get install libaio1
 
 # Install normal extension php
 RUN pecl install apcu
